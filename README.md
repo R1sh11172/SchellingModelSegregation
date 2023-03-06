@@ -1,2 +1,2 @@
 # SchellingModelSegregation
-Implementaiton of Schelling's Model of Segregation
+Implementation of Schelling's Model of Segregation
