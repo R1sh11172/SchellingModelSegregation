@@ -59,3 +59,6 @@ if run_button:
 
         # Display the current state of the office and information spread
         display_simulation_state(emps, spaces, t+1)
+
+
+
