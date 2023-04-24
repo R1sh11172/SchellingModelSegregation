@@ -11,17 +11,29 @@ class InteractionHandler:
         self.friendship_graph = friendship_graph
 
     # Handles interactions between employees in the same space
-    def handle_interactions(self, spaces):
+    def handle_interactions(self, spaces, timestep):
         for space in spaces:
             occupants = space.occupants
             for i in range(len(occupants)):
                 for j in range(i + 1, len(occupants)):
-                    occupants[i].interact(occupants[j], self.team_graph, self.friendship_graph)
+                    occupants[i].interact(occupants[j], self.team_graph, self.friendship_graph, timestep)
+
+import pandas as pd
 
 class MetricsHandler:
     def __init__(self, emps, spaces):
         self.emps = emps
         self.spaces = spaces
+        self.interactions_df = pd.DataFrame(columns=["time_step", "eid1", "eid2"])
+        self.movements_df = pd.DataFrame(columns=["time_step", "eid", "space"])
+
+    # Records employee interactions
+    def record_interaction(self, t, emp_a, emp_b):
+        self.interactions_df = self.interactions_df.append({"time_step": t, "eid1": emp_a, "eid2": emp_b}, ignore_index=True)
+
+    # Records employee movements
+    def record_movement(self, t, emp, space):
+        self.movements_df = self.movements_df.append({"time_step": t, "eid": emp, "space": space}, ignore_index=True)
 
     # Calculates metrics related to information dissemination
     def calculate_metrics(self):
@@ -38,6 +50,7 @@ class MetricsHandler:
             print(f"Space {space.sid} ({space.stype}): {[e.eid for e in space.occupants]}")
         print(f"Information spread: {[e.eid for e in self.emps if 'Important Information' in e.info]}")
         print()
+
 
 # Initializes the simulation with the given parameters
 def initialize_simulation(num_employees, num_teams, min_team_size, num_friendships, num_spaces, 
@@ -65,6 +78,10 @@ def run_simulation(emps, spaces, time_steps, initial_info_holder, team_graph, fr
     interaction_handler = InteractionHandler(team_graph, friendship_graph)
     metrics_handler = MetricsHandler(emps, spaces)
 
+    ## add metricshandler to employees
+    for emp in emps:
+        emp.metrics_handler = metrics_handler
+
     ## run simulation
     for t in range(time_steps):
         # Update employee locations
@@ -73,16 +90,17 @@ def run_simulation(emps, spaces, time_steps, initial_info_holder, team_graph, fr
             if cur_space is not None:
                 cur_space.remove_occupant(emp)
 
-            emp.move(spaces, threshold=3)
+            emp.move(spaces, threshold=3, timestep=t)
             new_space = emp.loc
             new_space.add_occupant(emp)
 
         # Simulate interactions between employees in the same space
-        interaction_handler.handle_interactions(spaces)
+        interaction_handler.handle_interactions(spaces, timestep=t)
 
         # Calculate and print metrics
         informed_count, informed_percentage = metrics_handler.calculate_metrics()
         metrics_handler.print_simulation_state(t, informed_count, informed_percentage)
+    return metrics_handler
 
 
 

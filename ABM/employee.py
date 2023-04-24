@@ -11,8 +11,9 @@ class Employee:
         self.loc = None
         self.info = set()
         self.friends = set()
+        self.metrics_handler = None
 
-    def move(self, spaces, threshold):
+    def move(self, spaces, threshold, timestep):
         ## filter out full spaces and current location
         available_spaces = [space for space in spaces if not space.is_full() and space != self.loc]
 
@@ -52,7 +53,7 @@ class Employee:
         # Select a new space based on calculated probabilities
         self.loc = random.choices(preferred_spaces, probabilities)[0]
 
-    def interact(self, other, team_graph, friendship_graph):
+    def interact(self, other, team_graph, friendship_graph, timestep):
         if self.loc.stype == "Workstation" or self.loc.stype == "Meeting Room":
             info_sharing_prob = 0.6
         else:  # "Break Area"
@@ -66,6 +67,7 @@ class Employee:
         if random.random() < info_sharing_prob:
             if friendship_graph.has_edge(self.eid, other.eid) or team_graph.has_edge(self.eid, other.eid):
                 self.share_info(other)
+                self.metrics_handler.record_interaction(timestep, self.eid, other.eid)
 
     def share_info(self, other):
         self.info.update(other.info)
