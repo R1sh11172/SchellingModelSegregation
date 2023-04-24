@@ -23,14 +23,6 @@ class MetricsHandler:
         self.emps = emps
         self.spaces = spaces
 
-        # Initialize DataFrames
-        self.interactions_df = pd.DataFrame(columns=["Time Step", "Employee 1", "Employee 2"])
-        self.informed_agents_df = pd.DataFrame(columns=["Time Step", "Informed Agents"])
-        self.interaction_locations_df = pd.DataFrame(columns=["Time Step", "Space ID", "Space Type"])
-        self.informed_hierarchy_df = pd.DataFrame(columns=["Time Step", "Hierarchy Level", "Informed Agents"])
-        self.informed_teams_df = pd.DataFrame(columns=["Time Step", "Team", "Informed Agents"])
-
-
     # Calculates metrics related to information dissemination
     def calculate_metrics(self):
         informed_count = sum(1 for e in self.emps if "Important Information" in e.info)
@@ -81,7 +73,7 @@ def run_simulation(emps, spaces, time_steps, initial_info_holder, team_graph, fr
             if cur_space is not None:
                 cur_space.remove_occupant(emp)
 
-            emp.move(spaces)
+            emp.move(spaces, threshold=3)
             new_space = emp.loc
             new_space.add_occupant(emp)
 

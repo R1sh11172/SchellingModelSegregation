@@ -8,10 +8,10 @@ def create_teams(employees, team_structure):
     team_graph = nx.Graph()
 
     for team_name, team_members in team_structure.items():
-        for eid in team_members:
-            employee = employees[eid - 1]
-            employee.team = team_name
-            team_graph.add_node(eid, team=team_name)
+        team_employee_objects = [employees[eid - 1] for eid in team_members]  # Get Employee objects
+        for employee in team_employee_objects:
+            employee.team = team_employee_objects  # Set each employee's team to the list of Employee objects
+            team_graph.add_node(employee.eid, team=team_name)
 
         for eid1, eid2 in itertools.combinations(team_members, 2):
             team_graph.add_edge(eid1, eid2)

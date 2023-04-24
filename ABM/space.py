@@ -11,4 +11,7 @@ class Space:
 
     def remove_occupant(self, employee):
         self.occupants.remove(employee)
+        
+    def is_full(self):
+        return len(self.occupants) >= self.capacity
 
