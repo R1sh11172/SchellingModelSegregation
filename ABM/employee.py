@@ -1,5 +1,6 @@
 import random
 import math
+import networkx as nx
 
 class Employee:
     def __init__(self, eid, position, team, hierarchy_level, hierarchy_adjustment_factor):
@@ -12,6 +13,10 @@ class Employee:
         self.info = set()
         self.friends = set()
         self.metrics_handler = None
+        self.speed = 1
+        self.target_space = None
+        self.path = []
+
 
     def move(self, spaces, threshold, timestep):
         ## filter out full spaces and current location
@@ -53,6 +58,18 @@ class Employee:
         # Select a new space based on calculated probabilities
         self.loc = random.choices(preferred_spaces, probabilities)[0]
 
+        self.target_space = random.choices(preferred_spaces, probabilities)[0]
+
+        # Compute path to target space using A* algorithm
+        start_node = (self.loc.position[0], self.loc.position[1])
+        end_node = (self.target_space.position[0], self.target_space.position[1])
+        graph = nx.Graph(spaces)  # create graph of all spaces
+        path = nx.astar_path(graph, start_node, end_node)
+
+        self.path = path
+        self.target_space = self.path.pop(0)
+
+
     def interact(self, other, team_graph, friendship_graph, timestep):
         if self.loc.stype == "Workstation" or self.loc.stype == "Meeting Room":
             info_sharing_prob = 0.6
@@ -76,3 +93,32 @@ class Employee:
     def add_friend(self, other):
         self.friends.add(other)
         other.friends.add(self)
+    
+    def update_location(self):
+        # If the employee has not yet reached the target space, move towards it
+        if self.target_space is not None:
+            x, y = self.loc.position
+            target_x, target_y = self.target_space.position
+            dx = target_x - x
+            dy = target_y - y
+            dist = math.sqrt(dx ** 2 + dy ** 2)
+
+            if dist > 0:
+                dx /= dist
+                dy /= dist
+
+                # Move towards the target space at the employee's speed
+                x += dx * self.speed
+                y += dy * self.speed
+
+                # If the employee reaches the target space, update the current location
+                if abs(x - target_x) < self.speed and abs(y - target_y) < self.speed:
+                    self.loc.remove_occupant(self)
+                    self.loc = self.target_space
+                    self.loc.add_occupant(self)
+
+                    # If there are more spaces in the path, update the target space to the next space in the path
+                    if len(self.path) > 0:
+                        self.target_space = self.path.pop(0)
+                    else:
+                        self.target_space = None
