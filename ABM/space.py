@@ -1,11 +1,11 @@
 class Space:
-    def __init__(self, sid, stype, capacity, position, purpose: int):
+    def __init__(self, sid, stype, capacity, position):
         self.sid = sid
         self.stype = stype
         self.capacity = capacity
         self.position = position
         self.occupants = []
-        self.purpose = purpose
+        # self.purpose = purpose
 
     def add_occupant(self, employee):
         self.occupants.append(employee)
